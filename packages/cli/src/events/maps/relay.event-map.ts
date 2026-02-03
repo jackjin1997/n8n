@@ -678,7 +678,7 @@ export type RelayEventMap = {
 	// #region Instance Policies
 
 	'instance-policies-updated': {
-		userId: string;
+		user: UserLike;
 		settingName: '2fa_enforcement' | 'workflow_publishing';
 		value: boolean;
 	};

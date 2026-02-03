@@ -2259,4 +2259,78 @@ describe('LogStreamingEventRelay', () => {
 			});
 		});
 	});
+
+	describe('instance policies events', () => {
+		it('should log `personal-publishing-restricted.enabled` when workflow_publishing is disabled', () => {
+			const event: RelayEventMap['instance-policies-updated'] = {
+				user: {
+					id: 'user123',
+					email: 'admin@example.com',
+					firstName: 'Admin',
+					lastName: 'User',
+					role: { slug: 'global:owner' },
+				},
+				settingName: 'workflow_publishing',
+				value: false,
+			};
+
+			eventService.emit('instance-policies-updated', event);
+
+			expect(eventBus.sendAuditEvent).toHaveBeenCalledWith({
+				eventName: 'n8n.audit.personal-publishing-restricted.enabled',
+				payload: {
+					userId: 'user123',
+					_email: 'admin@example.com',
+					_firstName: 'Admin',
+					_lastName: 'User',
+					globalRole: 'global:owner',
+				},
+			});
+		});
+
+		it('should log `personal-publishing-restricted.disabled` when workflow_publishing is enabled', () => {
+			const event: RelayEventMap['instance-policies-updated'] = {
+				user: {
+					id: 'user456',
+					email: 'admin2@example.com',
+					firstName: 'Another',
+					lastName: 'Admin',
+					role: { slug: 'global:admin' },
+				},
+				settingName: 'workflow_publishing',
+				value: true,
+			};
+
+			eventService.emit('instance-policies-updated', event);
+
+			expect(eventBus.sendAuditEvent).toHaveBeenCalledWith({
+				eventName: 'n8n.audit.personal-publishing-restricted.disabled',
+				payload: {
+					userId: 'user456',
+					_email: 'admin2@example.com',
+					_firstName: 'Another',
+					_lastName: 'Admin',
+					globalRole: 'global:admin',
+				},
+			});
+		});
+
+		it('should not log audit event for other settings like 2fa_enforcement', () => {
+			const event: RelayEventMap['instance-policies-updated'] = {
+				user: {
+					id: 'user789',
+					email: 'user@example.com',
+					firstName: 'Test',
+					lastName: 'User',
+					role: { slug: 'global:member' },
+				},
+				settingName: '2fa_enforcement',
+				value: true,
+			};
+
+			eventService.emit('instance-policies-updated', event);
+
+			expect(eventBus.sendAuditEvent).not.toHaveBeenCalled();
+		});
+	});
 });

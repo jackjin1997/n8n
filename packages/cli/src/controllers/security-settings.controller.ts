@@ -32,7 +32,7 @@ export class SecuritySettingsController {
 		await this.securitySettingsService.setPersonalSpacePublishing(dto.personalSpacePublishing);
 
 		this.eventService.emit('instance-policies-updated', {
-			userId: req.user.id,
+			user: req.user,
 			settingName: 'workflow_publishing',
 			value: dto.personalSpacePublishing,
 		});
