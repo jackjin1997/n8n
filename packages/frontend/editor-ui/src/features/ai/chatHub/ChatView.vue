@@ -65,6 +65,7 @@ import { hasRole } from '@/app/utils/rbac/checks';
 import { useFreeAiCredits } from '@/app/composables/useFreeAiCredits';
 import ChatGreetings from './components/ChatGreetings.vue';
 import { useChatPushHandler } from './composables/useChatPushHandler';
+import { useChatInputFocus } from './composables/useChatInputFocus';
 
 const router = useRouter();
 const route = useRoute();
@@ -334,6 +335,12 @@ const canAcceptFiles = computed(() => {
 });
 
 const fileDrop = useFileDrop(canAcceptFiles, onFilesDropped);
+
+// Enable "type-to-focus" behavior: when user starts typing anywhere in the view,
+// focus the chat input and insert the typed character
+useChatInputFocus(inputRef, {
+	disabled: computed(() => showWelcomeScreen.value === true || messagingState.value !== 'idle'),
+});
 
 function scrollToBottom(smooth: boolean) {
 	scrollContainerRef.value?.scrollTo({
