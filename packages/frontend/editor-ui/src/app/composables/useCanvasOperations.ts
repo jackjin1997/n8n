@@ -1610,13 +1610,6 @@ export function useCanvasOperations() {
 			);
 		};
 
-		const insertRect = {
-			x: insertX,
-			y: insertY,
-			width: nodeSize[0],
-			height: nodeSize[1],
-		};
-
 		// Step 1: Find initial candidates - nodes that overlap with or are to the right of insertion
 		// A node overlaps if its right edge extends into the insertion area
 		const initialCandidates = allNodes.filter((node) => {
@@ -1679,9 +1672,11 @@ export function useCanvasOperations() {
 		for (const sticky of stickyNodes) {
 			const stickyRect = getNodeRect(sticky);
 			const stickyLeftEdge = sticky.position[0];
+			const stickyRightEdge = stickyLeftEdge + stickyRect.width;
 			const stickyTop = sticky.position[1];
 			const stickyBottom = stickyTop + stickyRect.height;
 			const overlapsVertically = !(stickyBottom <= affectedMinY || stickyTop >= affectedMaxY);
+			const isInsertionInsideSticky = insertX >= stickyLeftEdge && insertX <= stickyRightEdge;
 
 			const stickyCenter = {
 				x: sticky.position[0] + stickyRect.width / 2,
@@ -1699,7 +1694,8 @@ export function useCanvasOperations() {
 					nodeCenterThreshold,
 				);
 
-			if (sourceNodeInsideSticky) {
+			// a left edge before the insertion position
+			if (sourceNodeInsideSticky && isInsertionInsideSticky) {
 				const associatedNodes = getAssociatedNodes(
 					sticky,
 					stickyRect,
@@ -1711,9 +1707,6 @@ export function useCanvasOperations() {
 				stickiesToStretch.push(sticky);
 				continue;
 			}
-
-			// For non-anchored stickies, determine behavior based on position and associations
-			const insertOverlapsSticky = doRectsOverlap(insertRect, stickyRect);
 
 			const associatedNodes = getAssociatedNodes(
 				sticky,
@@ -1749,7 +1742,7 @@ export function useCanvasOperations() {
 					// New node is too far from sticky after move - just move
 					stickiesToMove.push(sticky);
 				}
-			} else if (insertOverlapsSticky) {
+			} else if (isInsertionInsideSticky) {
 				// Sticky overlaps insertion but has no moving nodes - just stretch
 				stickiesToStretch.push(sticky);
 			} else if (stickyLeftEdge >= insertX) {
